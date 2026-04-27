@@ -467,7 +467,60 @@
         localStorage.setItem('cw-mode', mode);
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('mbtn-' + mode).classList.add('active');
+        if (mode === 'battle') generateAllBattleHints(); // 預先產生詞語提示
         loadLevel();
+    }
+
+    // ═══ 實戰模式：詞語提示（不洩漏答案）═══
+    let battleHints = {}; // { '取': '取得', '初': '當初', ... }
+
+    function getBattleQuestion(lvl) {
+        const ch = lvl.char;
+        // 優先用字單裡的詞語
+        if (lvl.hint.length > 1) {
+            const masked = lvl.hint.replace(ch, '＿');
+            return `寫出：${masked} 的「<span class="highlight">？</span>」`;
+        }
+        // 用快取的 Gemini 生成詞語
+        if (battleHints[ch] && battleHints[ch] !== ch) {
+            const masked = battleHints[ch].replace(ch, '＿');
+            return `寫出：${masked} 的「<span class="highlight">？</span>」`;
+        }
+        // 還沒生成 → 顯示佔位
+        return `寫出第 <span class="highlight">${currentLevel + 1}</span> 個字`;
+    }
+
+    async function generateAllBattleHints() {
+        if (!GEMINI_KEY) return;
+        // 找出需要生成詞語的單字（沒有詞語 hint 的）
+        const needHints = levels.filter(l => l.hint.length <= 1 && !battleHints[l.char]);
+        if (!needHints.length) return;
+        const chars = needHints.map(l => l.char).join('、');
+        try {
+            const res = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ contents: [{ parts: [{ text:
+                    `請為以下每個中文字各造一個常用的二字詞語（適合小學生）。
+回傳 JSON 格式，例如：{"取":"取得","初":"當初"}
+只要 JSON，不要其他文字。
+字：${chars}` }]}] })
+                }
+            );
+            const data = await res.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const clean = text.replace(/```json|```/g, '').trim();
+            const parsed = JSON.parse(clean);
+            Object.assign(battleHints, parsed);
+            // 更新當前題目顯示
+            if (currentMode === 'battle') {
+                const lvl = levels[currentLevel];
+                if (lvl) document.getElementById('question-text').innerHTML = getBattleQuestion(lvl);
+            }
+            console.log('🗡️ 實戰詞語已生成:', parsed);
+        } catch(e) {
+            console.warn('生成詞語失敗:', e);
+        }
     }
 
     function setFont(font) {
@@ -690,10 +743,16 @@
             return;
         }
         const lvl = levels[currentLevel];
-        document.getElementById('question-text').innerHTML =
-            lvl.hint.length > 1
-            ? lvl.hint.replace(lvl.char, `<span class="highlight">${lvl.char}</span>`)
-            : `寫出：<span class="highlight">${lvl.char}</span>`;
+        if (currentMode === 'battle') {
+            // 🗡️ 實戰模式：不洩漏答案
+            document.getElementById('question-text').innerHTML = getBattleQuestion(lvl);
+        } else {
+            // 🖌️ 描紅模式：顯示目標字
+            document.getElementById('question-text').innerHTML =
+                lvl.hint.length > 1
+                ? lvl.hint.replace(lvl.char, `<span class="highlight">${lvl.char}</span>`)
+                : `寫出：<span class="highlight">${lvl.char}</span>`;
+        }
         rewriteCanvas();
         renderCharPills();
 
