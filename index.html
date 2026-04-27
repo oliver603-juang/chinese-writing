@@ -79,6 +79,68 @@
         .font-btn:first-child { border-right: 1px solid #ddd; }
         .font-btn:nth-child(2) { border-right: 1px solid #ddd; }
 
+        /* 模式切換 */
+        .mode-toggle {
+            display: flex; border-radius: 14px; overflow: hidden;
+            border: 1px solid #ddd; margin-top: 4px;
+        }
+        .mode-btn {
+            padding: 3px 10px; border: none; font-size: 0.7rem; font-weight: 600;
+            cursor: pointer; background: white; color: #999; transition: all 0.2s;
+            font-family: inherit;
+        }
+        .mode-btn.active { background: #00b894; color: white; }
+        .mode-btn:first-child { border-right: 1px solid #ddd; }
+
+        /* 英雄榜按鈕 */
+        .trophy-btn {
+            width: 36px; height: 36px; border: none; border-radius: 50%;
+            background: white; font-size: 1.1rem; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        /* 英雄榜 Modal */
+        .lb-overlay {
+            display: none; position: fixed; inset: 0; z-index: 10003;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        .lb-overlay.open { display: flex; }
+        .lb-modal {
+            background: white; border-radius: 24px; padding: 20px;
+            max-width: 400px; width: 92%; max-height: 85vh; overflow-y: auto;
+            box-shadow: 0 16px 60px rgba(0,0,0,0.3);
+            animation: slideUp2 0.3s ease;
+        }
+        .lb-title { font-size: 1.2rem; font-weight: 700; text-align: center; margin-bottom: 8px; }
+        .lb-tabs { display: flex; gap: 4px; justify-content: center; margin-bottom: 12px; }
+        .lb-tab {
+            padding: 4px 12px; border: none; border-radius: 14px;
+            font-family: inherit; font-size: 0.72rem; font-weight: 600;
+            cursor: pointer; background: #eee; color: #888; transition: all 0.2s;
+        }
+        .lb-tab.active { background: #00b894; color: white; }
+        .lb-empty { text-align: center; color: #bbb; padding: 20px 0; font-size: 0.9rem; }
+        .lb-row {
+            display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+            border-radius: 10px; margin-bottom: 3px; font-size: 0.8rem;
+        }
+        .lb-row:nth-child(odd) { background: #fafafa; }
+        .lb-row .lb-rank { font-size: 1rem; font-weight: 700; min-width: 26px; text-align: center; }
+        .lb-row .lb-rank.gold { color: #FFD700; }
+        .lb-row .lb-rank.silver { color: #C0C0C0; }
+        .lb-row .lb-rank.bronze { color: #CD7F32; }
+        .lb-row .lb-user { font-weight: 600; min-width: 50px; }
+        .lb-row .lb-mode { font-size: 0.6rem; padding: 1px 5px; border-radius: 6px; background: #eee; color: #666; }
+        .lb-row .lb-mode.battle { background: #ffe0e0; color: #d63031; }
+        .lb-row .lb-info { flex: 1; font-size: 0.65rem; color: #999; text-align: right; }
+        .lb-row .lb-score { font-weight: 700; color: #00b894; min-width: 50px; text-align: right; }
+        .lb-row .lb-date { font-size: 0.6rem; color: #bbb; min-width: 40px; text-align: right; }
+        .lb-close {
+            display: block; margin: 8px auto 0; padding: 8px 24px; border: none; border-radius: 18px;
+            background: #00b894; color: white; font-family: inherit; font-size: 0.9rem;
+            font-weight: 600; cursor: pointer;
+        }
+
         /* ═══ 設定 Modal ═══ */
         .modal-overlay {
             display: none; position: fixed; inset: 0; z-index: 10000;
@@ -308,6 +370,20 @@
 
 <!-- ═══ 頂部列 ═══ -->
 <div class="top-bar">
+
+<!-- ═══ 英雄榜 Modal ═══ -->
+<div class="lb-overlay" id="lb-modal">
+    <div class="lb-modal">
+        <div class="lb-title">🏆 英雄榜</div>
+        <div class="lb-tabs">
+            <button class="lb-tab active" onclick="loadLeaderboard('all')" id="lb-tab-all">全部</button>
+            <button class="lb-tab" onclick="loadLeaderboard('iggy')" id="lb-tab-iggy">🦊 Iggy</button>
+            <button class="lb-tab" onclick="loadLeaderboard('yoyo')" id="lb-tab-yoyo">🐸 Yoyo</button>
+        </div>
+        <div id="lb-list"><div class="lb-empty">載入中...</div></div>
+        <button class="lb-close" onclick="document.getElementById('lb-modal').classList.remove('open')">關閉</button>
+    </div>
+</div>
     <div class="user-btns">
         <button class="user-btn active" id="ubtn-iggy" onclick="switchUser('iggy')">🦊 Iggy</button>
         <button class="user-btn" id="ubtn-yoyo" onclick="switchUser('yoyo')">🐸 Yoyo</button>
@@ -318,9 +394,14 @@
             <button class="font-btn" id="fbtn-jason" onclick="setFont('jason')">清松</button>
             <button class="font-btn" id="fbtn-yan" onclick="setFont('yan')">落雁</button>
         </div>
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="mbtn-trace" onclick="setMode('trace')">描紅</button>
+            <button class="mode-btn" id="mbtn-battle" onclick="setMode('battle')">實戰</button>
+        </div>
         <div class="score-badge" id="score-badge">0 分</div>
         <div class="progress-mini"><div class="progress-mini-fill" id="progress-fill"></div></div>
     </div>
+    <button class="trophy-btn" onclick="openLeaderboard()">🏆</button>
     <button class="gear-btn" onclick="openSettings()">⚙️</button>
 </div>
 
@@ -360,6 +441,7 @@
     let currentLevel = 0;
     let totalScore = 0;
     let currentFont = 'kai'; // 'kai' = 芫荽, 'jason' = 清松, 'yan' = 落雁
+    let currentMode = 'trace'; // 'trace' = 描紅, 'battle' = 實戰
     const CANVAS_SIZE = 320;
 
     const FONT_MAP = {
@@ -367,6 +449,14 @@
         jason: "'JasonHandwriting', cursive",
         yan:   "'ChenYuluoyan', cursive"
     };
+
+    function setMode(mode) {
+        currentMode = mode;
+        localStorage.setItem('cw-mode', mode);
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('mbtn-' + mode).classList.add('active');
+        loadLevel();
+    }
 
     function setFont(font) {
         currentFont = font;
@@ -612,10 +702,35 @@
 
     function drawHint(char, fontSpec) {
         hCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-        hCtx.font = fontSpec;
-        hCtx.textAlign = 'center'; hCtx.textBaseline = 'middle';
-        hCtx.fillStyle = '#e0e0e0';
-        hCtx.fillText(char, CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+        if (currentMode === 'battle') {
+            // 實戰模式：只畫格線，不畫灰體字
+            drawGrid();
+        } else {
+            // 描紅模式：畫灰體字
+            hCtx.font = fontSpec;
+            hCtx.textAlign = 'center'; hCtx.textBaseline = 'middle';
+            hCtx.fillStyle = '#e0e0e0';
+            hCtx.fillText(char, CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+        }
+    }
+
+    function drawGrid() {
+        const S = CANVAS_SIZE;
+        hCtx.strokeStyle = '#e8e8e8';
+        hCtx.lineWidth = 1;
+        // 4x4 格線（3 條水平 + 3 條垂直內線）
+        for (let i = 1; i <= 3; i++) {
+            const pos = S * i / 4;
+            hCtx.setLineDash(i === 2 ? [6, 4] : [3, 3]); // 中線用較長虛線
+            hCtx.beginPath(); hCtx.moveTo(0, pos); hCtx.lineTo(S, pos); hCtx.stroke();
+            hCtx.beginPath(); hCtx.moveTo(pos, 0); hCtx.lineTo(pos, S); hCtx.stroke();
+        }
+        // 對角線（米字格）
+        hCtx.strokeStyle = '#f0f0f0';
+        hCtx.setLineDash([4, 6]);
+        hCtx.beginPath(); hCtx.moveTo(0, 0); hCtx.lineTo(S, S); hCtx.stroke();
+        hCtx.beginPath(); hCtx.moveTo(S, 0); hCtx.lineTo(0, S); hCtx.stroke();
+        hCtx.setLineDash([]);
     }
 
     // 觸控/滑鼠繪圖
@@ -641,31 +756,48 @@
         const overlay = document.getElementById('grading-overlay');
         overlay.classList.remove('hidden');
 
-        // 1. 像素重合度評分
-        const pixelScore = calculatePixelScore();
-
-        // 2. Gemini OCR 辨識（盲讀）
-        let geminiResult = null;
-        if (GEMINI_KEY) {
-            geminiResult = await recognizeWithGemini();
-        }
-
-        overlay.classList.add('hidden');
-
-        // 合併評分
         const target = levels[currentLevel].char;
-        let finalScore = pixelScore.points;
-        let desc = pixelScore.desc;
-        let animClass = pixelScore.animClass;
+        let finalScore, desc, animClass;
 
-        // 如果 Gemini 辨識結果與目標不符，扣分
-        if (geminiResult !== null) {
-            showOcrToast(geminiResult, target);
-            if (geminiResult !== target) {
-                // AI 認不出來 = 字形差太多，最高只給 5 分
-                finalScore = Math.min(finalScore, 5);
-                desc = `AI 看成「${geminiResult}」`;
-                animClass = 'anim-bad';
+        if (currentMode === 'battle') {
+            // 🗡️ 實戰模式：只靠 Gemini OCR 評分
+            let geminiResult = null;
+            if (GEMINI_KEY) {
+                geminiResult = await recognizeWithGemini();
+            }
+            overlay.classList.add('hidden');
+
+            if (geminiResult !== null) {
+                showOcrToast(geminiResult, target);
+                if (geminiResult === target) {
+                    finalScore = 12; desc = '完美辨識！'; animClass = 'anim-perfect';
+                } else {
+                    finalScore = 3; desc = `AI 看成「${geminiResult}」`; animClass = 'anim-bad';
+                }
+            } else {
+                // 沒有 Gemini Key
+                finalScore = 6; desc = '已完成（無 AI）'; animClass = 'anim-normal';
+            }
+        } else {
+            // 🖌️ 描紅模式：像素比對 + Gemini OCR
+            const pixelScore = calculatePixelScore();
+            let geminiResult = null;
+            if (GEMINI_KEY) {
+                geminiResult = await recognizeWithGemini();
+            }
+            overlay.classList.add('hidden');
+
+            finalScore = pixelScore.points;
+            desc = pixelScore.desc;
+            animClass = pixelScore.animClass;
+
+            if (geminiResult !== null) {
+                showOcrToast(geminiResult, target);
+                if (geminiResult !== target) {
+                    finalScore = Math.min(finalScore, 5);
+                    desc = `AI 看成「${geminiResult}」`;
+                    animClass = 'anim-bad';
+                }
             }
         }
 
@@ -767,15 +899,26 @@
 
     function showComplete() {
         const maxScore = levels.length * 12;
+        const modeLabel = currentMode === 'battle' ? '🗡️ 實戰' : '🖌️ 描紅';
         const banner = document.createElement('div');
         banner.className = 'complete-banner';
         banner.innerHTML = `
             <div class="cb-emoji">🎉🦖</div>
-            <div class="cb-msg">全部寫完了！</div>
+            <div class="cb-msg">全部寫完了！(${modeLabel})</div>
             <div class="cb-score">${totalScore} / ${maxScore} 分</div>
             <button class="cb-btn" onclick="this.parentElement.remove(); initGame();">🔄 再來一次</button>
         `;
         document.body.appendChild(banner);
+
+        // 🏆 上傳成績到英雄榜
+        if (typeof saveCwScoreToCloud === 'function') {
+            saveCwScoreToCloud(currentUser, {
+                score: totalScore,
+                maxScore: maxScore,
+                chars: levels.length,
+                mode: currentMode,
+            });
+        }
     }
 
     function showNoKeyWarning() {
@@ -853,6 +996,44 @@
     }
 
     // ══════════════════════════════════════════
+    // 英雄榜 UI
+    // ══════════════════════════════════════════
+    function openLeaderboard() {
+        document.getElementById('lb-modal').classList.add('open');
+        loadLeaderboard('all');
+    }
+    function loadLeaderboard(filter) {
+        document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('lb-tab-' + filter).classList.add('active');
+        const list = document.getElementById('lb-list');
+        list.innerHTML = '<div class="lb-empty">載入中...</div>';
+        if (typeof fetchCwLeaderboard === 'function') {
+            fetchCwLeaderboard(filter).then(rows => {
+                if (!rows || !rows.length) { list.innerHTML = '<div class="lb-empty">還沒有紀錄，快去練習吧！</div>'; return; }
+                const medals = ['🥇','🥈','🥉'];
+                const rankCls = ['gold','silver','bronze'];
+                list.innerHTML = rows.map((r, i) => {
+                    const d = r.date ? new Date(r.date.seconds ? r.date.seconds * 1000 : r.date) : null;
+                    const dateStr = d ? `${d.getMonth()+1}/${d.getDate()}` : '';
+                    const emoji = r.user === 'iggy' ? '🦊' : '🐸';
+                    const modeLabel = r.mode === 'battle' ? '實戰' : '描紅';
+                    const modeCls = r.mode === 'battle' ? ' battle' : '';
+                    return `<div class="lb-row">
+                        <span class="lb-rank ${rankCls[i] || ''}">${medals[i] || (i+1)}</span>
+                        <span class="lb-user">${emoji}</span>
+                        <span class="lb-mode${modeCls}">${modeLabel}</span>
+                        <span class="lb-info">${r.chars || '?'}字</span>
+                        <span class="lb-score">${r.score}/${r.maxScore}</span>
+                        <span class="lb-date">${dateStr}</span>
+                    </div>`;
+                }).join('');
+            });
+        } else {
+            list.innerHTML = '<div class="lb-empty">Firebase 尚未載入</div>';
+        }
+    }
+
+    // ══════════════════════════════════════════
     // 初始化
     // ══════════════════════════════════════════
     window.onload = () => {
@@ -865,10 +1046,13 @@
         GEMINI_KEY = localStorage.getItem('cw-gemini-key') || '';
         currentUser = localStorage.getItem('cw-current-user') || 'iggy';
         currentFont = localStorage.getItem('cw-font') || 'kai';
+        currentMode = localStorage.getItem('cw-mode') || 'trace';
         document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('ubtn-' + currentUser).classList.add('active');
         document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('fbtn-' + currentFont).classList.add('active');
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('mbtn-' + currentMode).classList.add('active');
         loadUserData();
         // 等基本字體載入後再開始遊戲
         document.fonts.ready.then(() => {
@@ -936,6 +1120,39 @@
                 if (!doc.exists || !doc.metadata.hasPendingWrites) return;
             }, err => console.warn('監聽失敗:', err.message));
         });
+    }
+
+    // ═══ 英雄榜 Firebase 功能 ═══
+    async function saveCwScoreToCloud(user, data) {
+        try {
+            await db.collection('cw-scores').add({
+                user: user,
+                score: data.score,
+                maxScore: data.maxScore,
+                chars: data.chars,
+                mode: data.mode,
+                date: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('🏆 ' + user + ' 書法成績已上傳: ' + data.score + '/' + data.maxScore + ' (' + data.mode + ')');
+        } catch(e) {
+            console.warn('英雄榜上傳失敗:', e.message);
+        }
+    }
+
+    async function fetchCwLeaderboard(filter) {
+        try {
+            let query = db.collection('cw-scores').orderBy('score', 'desc').limit(20);
+            if (filter !== 'all') {
+                query = db.collection('cw-scores')
+                    .where('user', '==', filter)
+                    .orderBy('score', 'desc').limit(20);
+            }
+            const snap = await query.get();
+            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch(e) {
+            console.warn('英雄榜讀取失敗:', e.message);
+            return [];
+        }
     }
 </script>
 
