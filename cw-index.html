@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="恐龍書法家">
     <meta name="theme-color" content="#FFF3E0">
-    <link rel="manifest" href="manifest-cw.json">
-    <link rel="apple-touch-icon" href="icon-cw-192.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <title>恐龍書法家</title>
     <style>
         /* UI 字體仍從 Google Fonts 載入 */
@@ -41,9 +41,20 @@
 
         /* ═══ 頂部列 ═══ */
         .top-bar {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            z-index: 100; flex-shrink: 0;
+            display: flex; flex-wrap: wrap; align-items: center;
+            padding: 6px 10px 4px; background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            z-index: 100; flex-shrink: 0; gap: 4px;
+        }
+        .top-row1 {
+            display: flex; align-items: center; width: 100%;
+            justify-content: space-between;
+        }
+        .top-row1-left { display: flex; align-items: center; gap: 6px; }
+        .top-row1-right { display: flex; align-items: center; gap: 6px; }
+        .top-row2 {
+            display: flex; align-items: center; width: 100%;
+            justify-content: center; gap: 8px;
         }
         .user-btns { display: flex; gap: 6px; }
         .user-btn {
@@ -52,7 +63,6 @@
             cursor: pointer; background: white; color: #999; transition: all 0.2s;
         }
         .user-btn.active { background: #FFD700; color: #333; border-color: #FFD700; }
-        .top-info { display: flex; align-items: center; gap: 10px; }
         .score-badge {
             font-size: 1rem; font-weight: 700; color: var(--primary);
             background: #FFF3CD; padding: 4px 12px; border-radius: 16px;
@@ -60,10 +70,9 @@
         .progress-mini { width: 60px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
         .progress-mini-fill { height: 100%; background: linear-gradient(90deg, #FF9F43, #FF6B6B); transition: width 0.5s; }
         .gear-btn {
-            width: 36px; height: 36px; border: none; border-radius: 50%;
-            background: white; font-size: 1.1rem; cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1); display: flex;
-            align-items: center; justify-content: center;
+            width: 32px; height: 32px; border: none; border-radius: 50%;
+            background: #f5f5f5; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
         }
 
         /* ═══ 字體切換 ═══ */
@@ -78,6 +87,67 @@
         .font-btn.active { background: var(--secondary); color: white; }
         .font-btn:first-child { border-right: 1px solid #ddd; }
         .font-btn:nth-child(2) { border-right: 1px solid #ddd; }
+
+        /* 模式切換 */
+        .mode-toggle {
+            display: flex; border-radius: 14px; overflow: hidden;
+            border: 1px solid #ddd;
+        }
+        .mode-btn {
+            padding: 3px 10px; border: none; font-size: 0.7rem; font-weight: 600;
+            cursor: pointer; background: white; color: #999; transition: all 0.2s;
+            font-family: inherit;
+        }
+        .mode-btn.active { background: #00b894; color: white; }
+        .mode-btn:first-child { border-right: 1px solid #ddd; }
+
+        /* 英雄榜按鈕 */
+        .trophy-btn {
+            width: 32px; height: 32px; border: none; border-radius: 50%;
+            background: #f5f5f5; font-size: 1rem; cursor: pointer;
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+        }
+        /* 英雄榜 Modal */
+        .lb-overlay {
+            display: none; position: fixed; inset: 0; z-index: 10003;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        .lb-overlay.open { display: flex; }
+        .lb-modal {
+            background: white; border-radius: 24px; padding: 20px;
+            max-width: 400px; width: 92%; max-height: 85vh; overflow-y: auto;
+            box-shadow: 0 16px 60px rgba(0,0,0,0.3);
+            animation: slideUp2 0.3s ease;
+        }
+        .lb-title { font-size: 1.2rem; font-weight: 700; text-align: center; margin-bottom: 8px; }
+        .lb-tabs { display: flex; gap: 4px; justify-content: center; margin-bottom: 12px; }
+        .lb-tab {
+            padding: 4px 12px; border: none; border-radius: 14px;
+            font-family: inherit; font-size: 0.72rem; font-weight: 600;
+            cursor: pointer; background: #eee; color: #888; transition: all 0.2s;
+        }
+        .lb-tab.active { background: #00b894; color: white; }
+        .lb-empty { text-align: center; color: #bbb; padding: 20px 0; font-size: 0.9rem; }
+        .lb-row {
+            display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+            border-radius: 10px; margin-bottom: 3px; font-size: 0.8rem;
+        }
+        .lb-row:nth-child(odd) { background: #fafafa; }
+        .lb-row .lb-rank { font-size: 1rem; font-weight: 700; min-width: 26px; text-align: center; }
+        .lb-row .lb-rank.gold { color: #FFD700; }
+        .lb-row .lb-rank.silver { color: #C0C0C0; }
+        .lb-row .lb-rank.bronze { color: #CD7F32; }
+        .lb-row .lb-user { font-weight: 600; min-width: 50px; }
+        .lb-row .lb-mode { font-size: 0.6rem; padding: 1px 5px; border-radius: 6px; background: #eee; color: #666; }
+        .lb-row .lb-mode.battle { background: #ffe0e0; color: #d63031; }
+        .lb-row .lb-info { flex: 1; font-size: 0.65rem; color: #999; text-align: right; }
+        .lb-row .lb-score { font-weight: 700; color: #00b894; min-width: 50px; text-align: right; }
+        .lb-row .lb-date { font-size: 0.6rem; color: #bbb; min-width: 40px; text-align: right; }
+        .lb-close {
+            display: block; margin: 8px auto 0; padding: 8px 24px; border: none; border-radius: 18px;
+            background: #00b894; color: white; font-family: inherit; font-size: 0.9rem;
+            font-weight: 600; cursor: pointer;
+        }
 
         /* ═══ 設定 Modal ═══ */
         .modal-overlay {
@@ -303,25 +373,49 @@
             <button class="modal-btn cancel" onclick="closeSettings()">取消</button>
             <button class="modal-btn save" onclick="saveSettings()">✅ 儲存</button>
         </div>
+        <div style="text-align:center; margin-top:8px; font-size:0.6rem; color:#ccc;" id="version-display"></div>
+    </div>
+</div>
+
+<!-- ═══ 英雄榜 Modal ═══ -->
+<div class="lb-overlay" id="lb-modal">
+    <div class="lb-modal">
+        <div class="lb-title">🏆 英雄榜</div>
+        <div class="lb-tabs">
+            <button class="lb-tab active" onclick="loadLeaderboard('all')" id="lb-tab-all">全部</button>
+            <button class="lb-tab" onclick="loadLeaderboard('iggy')" id="lb-tab-iggy">🦊 Iggy</button>
+            <button class="lb-tab" onclick="loadLeaderboard('yoyo')" id="lb-tab-yoyo">🐸 Yoyo</button>
+        </div>
+        <div id="lb-list"><div class="lb-empty">載入中...</div></div>
+        <button class="lb-close" onclick="document.getElementById('lb-modal').classList.remove('open')">關閉</button>
     </div>
 </div>
 
 <!-- ═══ 頂部列 ═══ -->
 <div class="top-bar">
-    <div class="user-btns">
-        <button class="user-btn active" id="ubtn-iggy" onclick="switchUser('iggy')">🦊 Iggy</button>
-        <button class="user-btn" id="ubtn-yoyo" onclick="switchUser('yoyo')">🐸 Yoyo</button>
+    <div class="top-row1">
+        <div class="top-row1-left">
+            <button class="user-btn active" id="ubtn-iggy" onclick="switchUser('iggy')">🦊 Iggy</button>
+            <button class="user-btn" id="ubtn-yoyo" onclick="switchUser('yoyo')">🐸 Yoyo</button>
+        </div>
+        <div class="top-row1-right">
+            <div class="score-badge" id="score-badge">0 分</div>
+            <button class="trophy-btn" onclick="openLeaderboard()">🏆</button>
+            <button class="gear-btn" onclick="openSettings()" title="版本資訊">⚙️</button>
+        </div>
     </div>
-    <div class="top-info">
+    <div class="top-row2">
         <div class="font-toggle">
             <button class="font-btn active" id="fbtn-kai" onclick="setFont('kai')">芫荽</button>
             <button class="font-btn" id="fbtn-jason" onclick="setFont('jason')">清松</button>
             <button class="font-btn" id="fbtn-yan" onclick="setFont('yan')">落雁</button>
         </div>
-        <div class="score-badge" id="score-badge">0 分</div>
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="mbtn-trace" onclick="setMode('trace')">描紅</button>
+            <button class="mode-btn" id="mbtn-battle" onclick="setMode('battle')">實戰</button>
+        </div>
         <div class="progress-mini"><div class="progress-mini-fill" id="progress-fill"></div></div>
     </div>
-    <button class="gear-btn" onclick="openSettings()">⚙️</button>
 </div>
 
 <!-- ═══ 遊戲畫面 ═══ -->
@@ -354,12 +448,14 @@
     // ══════════════════════════════════════════
     // 全域狀態
     // ══════════════════════════════════════════
+    const APP_VERSION = 'v2.5.0-20260428';
     let currentUser = 'iggy';
     let GEMINI_KEY = '';
     let levels = []; // [{char, hint}]
     let currentLevel = 0;
     let totalScore = 0;
     let currentFont = 'kai'; // 'kai' = 芫荽, 'jason' = 清松, 'yan' = 落雁
+    let currentMode = 'trace'; // 'trace' = 描紅, 'battle' = 實戰
     const CANVAS_SIZE = 320;
 
     const FONT_MAP = {
@@ -367,6 +463,149 @@
         jason: "'JasonHandwriting', cursive",
         yan:   "'ChenYuluoyan', cursive"
     };
+
+    function setMode(mode) {
+        currentMode = mode;
+        localStorage.setItem('cw-mode', mode);
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('mbtn-' + mode).classList.add('active');
+        if (mode === 'battle') {
+            // 先用 Firebase + 本地詞庫，不夠的才呼叫 Gemini
+            if (!cloudWordsLoaded && typeof loadBattleWordsFromCloud === 'function') {
+                loadBattleWordsFromCloud().then(() => {
+                    generateAllBattleHints();
+                    loadLevel();
+                });
+                return;
+            }
+            generateAllBattleHints();
+        }
+        loadLevel();
+    }
+
+    // ═══ 實戰模式：詞語提示（不洩漏答案）═══
+    let battleHints = {}; // { '取': '取得', '初': '當初', ... }
+    let battleHintFailed = {}; // API 失敗的字，避免重複呼叫
+    let cloudWordsLoaded = false;
+
+    // 本地常用詞庫（離線備案，Firebase + Gemini 都不通時使用）
+    const LOCAL_WORDS = {
+      '大':'大人','小':'小心','中':'中間','上':'上面','下':'下雨','左':'左邊','右':'右手',
+      '天':'天空','地':'地上','人':'人們','日':'日子','月':'月亮','水':'水果','火':'火車',
+      '山':'山上','木':'木頭','花':'花園','草':'草地','風':'風景','雨':'雨天','雪':'雪花',
+      '育':'教育','博':'博士','史':'歷史','型':'模型','功':'功夫','失':'失去','駐':'駐守',
+      '守':'守護','勇':'勇氣','兵':'士兵','附':'附近','瞭':'瞭解','頂':'頂端','標':'標準',
+      '桐':'油桐','初':'初次','夏':'夏天','腰':'腰帶','取':'取得','抬':'抬頭','梢':'樹梢',
+      '禮':'禮物','肩':'肩膀','掌':'手掌','瓣':'花瓣','鋪':'鋪路','童':'兒童','染':'染色',
+      '覆':'覆蓋','椏':'枝椏','簇':'一簇','蕊':'花蕊','油':'油畫','樹':'樹木','枝':'樹枝',
+      '服':'衣服','頭':'頭髮','巴':'尾巴','話':'說話','蓋':'蓋子',
+      '王':'國王','玉':'玉石','田':'田地','目':'目標','耳':'耳朵','手':'手指','足':'足球',
+      '口':'門口','牛':'牛奶','馬':'馬上','魚':'金魚','鳥':'小鳥','蟲':'昆蟲',
+      '白':'白色','黑':'黑色','紅':'紅色','青':'青春','明':'明天','光':'光線','星':'星星',
+      '書':'讀書','學':'學校','字':'寫字','文':'文章','言':'語言','語':'國語','數':'數學',
+      '家':'回家','國':'國家','城':'城市','村':'農村','路':'馬路','門':'開門','窗':'窗戶',
+      '車':'汽車','船':'大船','飛':'飛機','走':'走路','跑':'跑步','跳':'跳舞','坐':'坐下',
+      '吃':'吃飯','喝':'喝水','看':'看見','聽':'聽見','說':'說話','讀':'讀書','寫':'寫字',
+      '多':'多少','少':'少年','長':'長大','短':'短褲','高':'高興','低':'低頭','快':'快樂',
+      '慢':'慢走','好':'好人','美':'美麗','新':'新年','舊':'舊的','老':'老師','幼':'幼稚',
+      '父':'父親','母':'母親','兄':'兄弟','弟':'弟弟','姊':'姊姊','妹':'妹妹','友':'朋友',
+      '春':'春天','秋':'秋天','冬':'冬天','早':'早上','晚':'晚上','午':'中午','夜':'夜晚',
+      '東':'東西','西':'西方','南':'南方','北':'北方','前':'前面','後':'後來','裡':'裡面',
+      '外':'外面','遠':'遠方','近':'附近','開':'開心','關':'關門','來':'來去','去':'出去',
+      '出':'出發','入':'進入','回':'回家','問':'問題','答':'回答','對':'對面','錯':'錯誤',
+      '心':'開心','力':'力氣','生':'生日','食':'食物','衣':'衣服','住':'住家',
+      '行':'行走','工':'工作','平':'平安','安':'安全','定':'一定','正':'正確','直':'一直',
+      '真':'真的','假':'放假','非':'非常','可':'可以',
+      '能':'能力','會':'開會','知':'知道','想':'想念','愛':'可愛','怕':'害怕','喜':'喜歡',
+      '樂':'快樂','苦':'辛苦','冷':'寒冷','熱':'炎熱',
+      '色':'顏色','聲':'聲音','香':'香味','重':'重要','輕':'輕鬆','深':'深海',
+      '濕':'潮濕','乾':'乾淨','潮':'潮流','流':'河流','河':'河水','海':'大海','湖':'湖水',
+      '雲':'白雲','雷':'打雷','電':'電話','石':'石頭','金':'金色','銀':'銀色',
+      '竹':'竹子','米':'白米','豆':'紅豆','果':'水果','菜':'蔬菜',
+      '根':'樹根','葉':'葉子','種':'種子','林':'森林','園':'公園','場':'操場',
+      '球':'地球','氣':'天氣','紙':'紙張','筆':'鉛筆',
+      '桌':'桌子','椅':'椅子','床':'睡床','房':'房間','樓':'樓梯','橋':'石橋',
+    };
+
+    // 查詞順序：Firebase 快取 → 本地詞庫 → Gemini API
+    function getBattleQuestion(lvl) {
+        const ch = lvl.char;
+        // 1. 用已載入的詞（battleHints 含 Firebase 快取 + Gemini 結果 + 本地詞庫）
+        let word = battleHints[ch];
+        // 2. 用字單裡的多字詞語
+        if (!word && lvl.hint.length > 1) word = lvl.hint;
+        // 3. 用本地詞庫
+        if (!word) word = LOCAL_WORDS[ch];
+
+        if (word && word.length > 1 && word.includes(ch)) {
+            const masked = word.replace(ch, '「＿」');
+            return `寫出：${masked}`;
+        }
+        // 4. 都沒有 → 觸發 Gemini 單字生成
+        if (!battleHintFailed[ch]) generateSingleBattleHint(ch);
+        return `<span style="color:#aaa">🧠 造詞中...</span>`;
+    }
+
+    async function generateSingleBattleHint(ch) {
+        if (!GEMINI_KEY || battleHints[ch] || battleHintFailed[ch]) return;
+        try {
+            const res = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ contents: [{ parts: [{ text:
+                    `請用「${ch}」造一個常用的二字詞語（適合小學生理解）。只回傳那個詞語，不要其他文字。` }]}] })
+                }
+            );
+            if (!res.ok) { battleHintFailed[ch] = true; return; }
+            const data = await res.json();
+            const word = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+            if (word.length >= 2 && word.includes(ch)) {
+                battleHints[ch] = word;
+                // ☁️ 存到 Firebase 共用詞庫
+                if (typeof saveBattleWord === 'function') saveBattleWord(ch, word);
+                if (currentMode === 'battle' && levels[currentLevel]?.char === ch) {
+                    document.getElementById('question-text').innerHTML = getBattleQuestion(levels[currentLevel]);
+                }
+            }
+        } catch(e) {
+            battleHintFailed[ch] = true;
+            console.warn('單字造詞失敗:', e);
+        }
+    }
+
+    async function generateAllBattleHints() {
+        // 只為 Firebase 和本地詞庫都沒有的字呼叫 Gemini
+        if (!GEMINI_KEY) return;
+        const needHints = levels.filter(l => !battleHints[l.char] && !LOCAL_WORDS[l.char]);
+        if (!needHints.length) return;
+        const chars = needHints.map(l => l.char).join('、');
+        try {
+            const res = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ contents: [{ parts: [{ text:
+                    `請為以下每個中文字各造一個常用的二字詞語（適合小學生）。
+回傳 JSON 格式，例如：{"取":"取得","初":"當初"}
+只要 JSON，不要其他文字。
+字：${chars}` }]}] })
+                }
+            );
+            if (!res.ok) { console.warn('批次造詞 API:', res.status); return; }
+            const data = await res.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const clean = text.replace(/```json|```/g, '').trim();
+            const parsed = JSON.parse(clean);
+            Object.assign(battleHints, parsed);
+            // ☁️ 批次存到 Firebase
+            if (typeof saveBattleWords === 'function') saveBattleWords(parsed);
+            if (currentMode === 'battle' && levels[currentLevel]) {
+                document.getElementById('question-text').innerHTML = getBattleQuestion(levels[currentLevel]);
+            }
+            console.log('🗡️ 實戰詞語已生成:', parsed);
+        } catch(e) {
+            console.warn('批次造詞失敗:', e);
+        }
+    }
 
     function setFont(font) {
         currentFont = font;
@@ -588,10 +827,16 @@
             return;
         }
         const lvl = levels[currentLevel];
-        document.getElementById('question-text').innerHTML =
-            lvl.hint.length > 1
-            ? lvl.hint.replace(lvl.char, `<span class="highlight">${lvl.char}</span>`)
-            : `寫出：<span class="highlight">${lvl.char}</span>`;
+        if (currentMode === 'battle') {
+            // 🗡️ 實戰模式：不洩漏答案
+            document.getElementById('question-text').innerHTML = getBattleQuestion(lvl);
+        } else {
+            // 🖌️ 描紅模式：顯示目標字
+            document.getElementById('question-text').innerHTML =
+                lvl.hint.length > 1
+                ? lvl.hint.replace(lvl.char, `<span class="highlight">${lvl.char}</span>`)
+                : `寫出：<span class="highlight">${lvl.char}</span>`;
+        }
         rewriteCanvas();
         renderCharPills();
 
@@ -612,10 +857,35 @@
 
     function drawHint(char, fontSpec) {
         hCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-        hCtx.font = fontSpec;
-        hCtx.textAlign = 'center'; hCtx.textBaseline = 'middle';
-        hCtx.fillStyle = '#e0e0e0';
-        hCtx.fillText(char, CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+        if (currentMode === 'battle') {
+            // 實戰模式：只畫格線，不畫灰體字
+            drawGrid();
+        } else {
+            // 描紅模式：畫灰體字
+            hCtx.font = fontSpec;
+            hCtx.textAlign = 'center'; hCtx.textBaseline = 'middle';
+            hCtx.fillStyle = '#e0e0e0';
+            hCtx.fillText(char, CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+        }
+    }
+
+    function drawGrid() {
+        const S = CANVAS_SIZE;
+        hCtx.strokeStyle = '#e8e8e8';
+        hCtx.lineWidth = 1;
+        // 4x4 格線（3 條水平 + 3 條垂直內線）
+        for (let i = 1; i <= 3; i++) {
+            const pos = S * i / 4;
+            hCtx.setLineDash(i === 2 ? [6, 4] : [3, 3]); // 中線用較長虛線
+            hCtx.beginPath(); hCtx.moveTo(0, pos); hCtx.lineTo(S, pos); hCtx.stroke();
+            hCtx.beginPath(); hCtx.moveTo(pos, 0); hCtx.lineTo(pos, S); hCtx.stroke();
+        }
+        // 對角線（米字格）
+        hCtx.strokeStyle = '#f0f0f0';
+        hCtx.setLineDash([4, 6]);
+        hCtx.beginPath(); hCtx.moveTo(0, 0); hCtx.lineTo(S, S); hCtx.stroke();
+        hCtx.beginPath(); hCtx.moveTo(S, 0); hCtx.lineTo(0, S); hCtx.stroke();
+        hCtx.setLineDash([]);
     }
 
     // 觸控/滑鼠繪圖
@@ -641,31 +911,48 @@
         const overlay = document.getElementById('grading-overlay');
         overlay.classList.remove('hidden');
 
-        // 1. 像素重合度評分
-        const pixelScore = calculatePixelScore();
-
-        // 2. Gemini OCR 辨識（盲讀）
-        let geminiResult = null;
-        if (GEMINI_KEY) {
-            geminiResult = await recognizeWithGemini();
-        }
-
-        overlay.classList.add('hidden');
-
-        // 合併評分
         const target = levels[currentLevel].char;
-        let finalScore = pixelScore.points;
-        let desc = pixelScore.desc;
-        let animClass = pixelScore.animClass;
+        let finalScore, desc, animClass;
 
-        // 如果 Gemini 辨識結果與目標不符，扣分
-        if (geminiResult !== null) {
-            showOcrToast(geminiResult, target);
-            if (geminiResult !== target) {
-                // AI 認不出來 = 字形差太多，最高只給 5 分
-                finalScore = Math.min(finalScore, 5);
-                desc = `AI 看成「${geminiResult}」`;
-                animClass = 'anim-bad';
+        if (currentMode === 'battle') {
+            // 🗡️ 實戰模式：只靠 Gemini OCR 評分
+            let geminiResult = null;
+            if (GEMINI_KEY) {
+                geminiResult = await recognizeWithGemini();
+            }
+            overlay.classList.add('hidden');
+
+            if (geminiResult !== null) {
+                showOcrToast(geminiResult, target);
+                if (geminiResult === target) {
+                    finalScore = 12; desc = '完美辨識！'; animClass = 'anim-perfect';
+                } else {
+                    finalScore = 3; desc = `AI 看成「${geminiResult}」`; animClass = 'anim-bad';
+                }
+            } else {
+                // 沒有 Gemini Key
+                finalScore = 6; desc = '已完成（無 AI）'; animClass = 'anim-normal';
+            }
+        } else {
+            // 🖌️ 描紅模式：像素比對 + Gemini OCR
+            const pixelScore = calculatePixelScore();
+            let geminiResult = null;
+            if (GEMINI_KEY) {
+                geminiResult = await recognizeWithGemini();
+            }
+            overlay.classList.add('hidden');
+
+            finalScore = pixelScore.points;
+            desc = pixelScore.desc;
+            animClass = pixelScore.animClass;
+
+            if (geminiResult !== null) {
+                showOcrToast(geminiResult, target);
+                if (geminiResult !== target) {
+                    finalScore = Math.min(finalScore, 5);
+                    desc = `AI 看成「${geminiResult}」`;
+                    animClass = 'anim-bad';
+                }
             }
         }
 
@@ -767,15 +1054,26 @@
 
     function showComplete() {
         const maxScore = levels.length * 12;
+        const modeLabel = currentMode === 'battle' ? '🗡️ 實戰' : '🖌️ 描紅';
         const banner = document.createElement('div');
         banner.className = 'complete-banner';
         banner.innerHTML = `
             <div class="cb-emoji">🎉🦖</div>
-            <div class="cb-msg">全部寫完了！</div>
+            <div class="cb-msg">全部寫完了！(${modeLabel})</div>
             <div class="cb-score">${totalScore} / ${maxScore} 分</div>
             <button class="cb-btn" onclick="this.parentElement.remove(); initGame();">🔄 再來一次</button>
         `;
         document.body.appendChild(banner);
+
+        // 🏆 上傳成績到英雄榜
+        if (typeof saveCwScoreToCloud === 'function') {
+            saveCwScoreToCloud(currentUser, {
+                score: totalScore,
+                maxScore: maxScore,
+                chars: levels.length,
+                mode: currentMode,
+            });
+        }
     }
 
     function showNoKeyWarning() {
@@ -853,9 +1151,49 @@
     }
 
     // ══════════════════════════════════════════
+    // 英雄榜 UI
+    // ══════════════════════════════════════════
+    function openLeaderboard() {
+        document.getElementById('lb-modal').classList.add('open');
+        loadLeaderboard('all');
+    }
+    function loadLeaderboard(filter) {
+        document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('lb-tab-' + filter).classList.add('active');
+        const list = document.getElementById('lb-list');
+        list.innerHTML = '<div class="lb-empty">載入中...</div>';
+        if (typeof fetchCwLeaderboard === 'function') {
+            fetchCwLeaderboard(filter).then(rows => {
+                if (!rows || !rows.length) { list.innerHTML = '<div class="lb-empty">還沒有紀錄，快去練習吧！</div>'; return; }
+                const medals = ['🥇','🥈','🥉'];
+                const rankCls = ['gold','silver','bronze'];
+                list.innerHTML = rows.map((r, i) => {
+                    const d = r.date ? new Date(r.date.seconds ? r.date.seconds * 1000 : r.date) : null;
+                    const dateStr = d ? `${d.getMonth()+1}/${d.getDate()}` : '';
+                    const emoji = r.user === 'iggy' ? '🦊' : '🐸';
+                    const modeLabel = r.mode === 'battle' ? '實戰' : '描紅';
+                    const modeCls = r.mode === 'battle' ? ' battle' : '';
+                    return `<div class="lb-row">
+                        <span class="lb-rank ${rankCls[i] || ''}">${medals[i] || (i+1)}</span>
+                        <span class="lb-user">${emoji}</span>
+                        <span class="lb-mode${modeCls}">${modeLabel}</span>
+                        <span class="lb-info">${r.chars || '?'}字</span>
+                        <span class="lb-score">${r.score}/${r.maxScore}</span>
+                        <span class="lb-date">${dateStr}</span>
+                    </div>`;
+                }).join('');
+            });
+        } else {
+            list.innerHTML = '<div class="lb-empty">Firebase 尚未載入</div>';
+        }
+    }
+
+    // ══════════════════════════════════════════
     // 初始化
     // ══════════════════════════════════════════
     window.onload = () => {
+        console.log('🦖 恐龍書法家 ' + APP_VERSION);
+        document.getElementById('version-display').textContent = '恐龍書法家 ' + APP_VERSION;
         // 檢查 URL 是否有同步資料
         const imported = importFromUrl();
         if (imported) {
@@ -865,10 +1203,13 @@
         GEMINI_KEY = localStorage.getItem('cw-gemini-key') || '';
         currentUser = localStorage.getItem('cw-current-user') || 'iggy';
         currentFont = localStorage.getItem('cw-font') || 'kai';
+        currentMode = localStorage.getItem('cw-mode') || 'trace';
         document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('ubtn-' + currentUser).classList.add('active');
         document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('fbtn-' + currentFont).classList.add('active');
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('mbtn-' + currentMode).classList.add('active');
         loadUserData();
         // 等基本字體載入後再開始遊戲
         document.fonts.ready.then(() => {
@@ -936,6 +1277,98 @@
                 if (!doc.exists || !doc.metadata.hasPendingWrites) return;
             }, err => console.warn('監聽失敗:', err.message));
         });
+    }
+
+    // ═══ 英雄榜 Firebase 功能 ═══
+    async function saveCwScoreToCloud(user, data) {
+        try {
+            await db.collection('cw-scores').add({
+                user: user,
+                score: data.score,
+                maxScore: data.maxScore,
+                chars: data.chars,
+                mode: data.mode,
+                date: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('🏆 ' + user + ' 書法成績已上傳: ' + data.score + '/' + data.maxScore + ' (' + data.mode + ')');
+        } catch(e) {
+            console.warn('英雄榜上傳失敗:', e.message);
+        }
+    }
+
+    // ═══ 共用詞庫 Firebase 快取 ═══
+    // 存單字詞
+    async function saveBattleWord(ch, word) {
+        try {
+            await db.collection('cw-battle-words').doc('shared').set(
+                { [ch]: word, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+                { merge: true }
+            );
+            console.log('📚 詞庫已更新: ' + ch + '→' + word);
+        } catch(e) { console.warn('詞庫儲存失敗:', e.message); }
+    }
+    // 批次存詞
+    async function saveBattleWords(wordsObj) {
+        try {
+            await db.collection('cw-battle-words').doc('shared').set(
+                { ...wordsObj, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+                { merge: true }
+            );
+            console.log('📚 詞庫批次更新: ' + Object.keys(wordsObj).length + ' 個字');
+        } catch(e) { console.warn('詞庫批次儲存失敗:', e.message); }
+    }
+    // 載入所有已快取的詞
+    async function loadBattleWordsFromCloud() {
+        try {
+            const doc = await db.collection('cw-battle-words').doc('shared').get();
+            if (doc.exists) {
+                const data = doc.data();
+                delete data.updatedAt; // 移除 timestamp 欄位
+                Object.assign(battleHints, data);
+                cloudWordsLoaded = true;
+                console.log('📚 已從雲端載入 ' + Object.keys(data).length + ' 個詞');
+                // 如果在實戰模式，更新當前題目
+                if (currentMode === 'battle' && levels[currentLevel]) {
+                    document.getElementById('question-text').innerHTML = getBattleQuestion(levels[currentLevel]);
+                }
+            }
+        } catch(e) {
+            console.warn('詞庫雲端載入失敗:', e.message);
+        }
+    }
+    // 把本地詞庫中用到的詞也存到 Firebase（一次性同步）
+    async function syncLocalWordsToCloud() {
+        if (cloudWordsLoaded) {
+            const newWords = {};
+            for (const ch of levels.map(l => l.char)) {
+                if (!battleHints[ch] && LOCAL_WORDS[ch]) {
+                    newWords[ch] = LOCAL_WORDS[ch];
+                    battleHints[ch] = LOCAL_WORDS[ch];
+                }
+            }
+            if (Object.keys(newWords).length > 0 && typeof saveBattleWords === 'function') {
+                saveBattleWords(newWords);
+            }
+        }
+    }
+
+    // 🚀 App 啟動時載入雲端詞庫
+    loadBattleWordsFromCloud().then(() => syncLocalWordsToCloud());
+
+    async function fetchCwLeaderboard(filter) {
+        try {
+            let query = db.collection('cw-scores').orderBy('score', 'desc').limit(20);
+            if (filter !== 'all') {
+                query = db.collection('cw-scores')
+                    .where('user', '==', filter)
+                    .orderBy('score', 'desc').limit(20);
+            }
+            const snap = await query.get();
+            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch(e) {
+            console.warn('英雄榜讀取失敗:', e.message);
+            return [];
+        }
     }
 </script>
 
