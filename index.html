@@ -373,6 +373,7 @@
             <button class="modal-btn cancel" onclick="closeSettings()">取消</button>
             <button class="modal-btn save" onclick="saveSettings()">✅ 儲存</button>
         </div>
+        <div style="text-align:center; margin-top:8px; font-size:0.6rem; color:#ccc;" id="version-display"></div>
     </div>
 </div>
 
@@ -400,7 +401,7 @@
         <div class="top-row1-right">
             <div class="score-badge" id="score-badge">0 分</div>
             <button class="trophy-btn" onclick="openLeaderboard()">🏆</button>
-            <button class="gear-btn" onclick="openSettings()">⚙️</button>
+            <button class="gear-btn" onclick="openSettings()" title="版本資訊">⚙️</button>
         </div>
     </div>
     <div class="top-row2">
@@ -447,6 +448,7 @@
     // ══════════════════════════════════════════
     // 全域狀態
     // ══════════════════════════════════════════
+    const APP_VERSION = 'v2.5.0-20260428';
     let currentUser = 'iggy';
     let GEMINI_KEY = '';
     let levels = []; // [{char, hint}]
@@ -1190,6 +1192,8 @@
     // 初始化
     // ══════════════════════════════════════════
     window.onload = () => {
+        console.log('🦖 恐龍書法家 ' + APP_VERSION);
+        document.getElementById('version-display').textContent = '恐龍書法家 ' + APP_VERSION;
         // 檢查 URL 是否有同步資料
         const imported = importFromUrl();
         if (imported) {
