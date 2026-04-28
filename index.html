@@ -467,28 +467,85 @@
         localStorage.setItem('cw-mode', mode);
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('mbtn-' + mode).classList.add('active');
-        if (mode === 'battle') generateAllBattleHints();
+        if (mode === 'battle') {
+            // 先用 Firebase + 本地詞庫，不夠的才呼叫 Gemini
+            if (!cloudWordsLoaded && typeof loadBattleWordsFromCloud === 'function') {
+                loadBattleWordsFromCloud().then(() => {
+                    generateAllBattleHints();
+                    loadLevel();
+                });
+                return;
+            }
+            generateAllBattleHints();
+        }
         loadLevel();
     }
 
     // ═══ 實戰模式：詞語提示（不洩漏答案）═══
     let battleHints = {}; // { '取': '取得', '初': '當初', ... }
+    let battleHintFailed = {}; // API 失敗的字，避免重複呼叫
+    let cloudWordsLoaded = false;
 
+    // 本地常用詞庫（離線備案，Firebase + Gemini 都不通時使用）
+    const LOCAL_WORDS = {
+      '大':'大人','小':'小心','中':'中間','上':'上面','下':'下雨','左':'左邊','右':'右手',
+      '天':'天空','地':'地上','人':'人們','日':'日子','月':'月亮','水':'水果','火':'火車',
+      '山':'山上','木':'木頭','花':'花園','草':'草地','風':'風景','雨':'雨天','雪':'雪花',
+      '育':'教育','博':'博士','史':'歷史','型':'模型','功':'功夫','失':'失去','駐':'駐守',
+      '守':'守護','勇':'勇氣','兵':'士兵','附':'附近','瞭':'瞭解','頂':'頂端','標':'標準',
+      '桐':'油桐','初':'初次','夏':'夏天','腰':'腰帶','取':'取得','抬':'抬頭','梢':'樹梢',
+      '禮':'禮物','肩':'肩膀','掌':'手掌','瓣':'花瓣','鋪':'鋪路','童':'兒童','染':'染色',
+      '覆':'覆蓋','椏':'枝椏','簇':'一簇','蕊':'花蕊','油':'油畫','樹':'樹木','枝':'樹枝',
+      '服':'衣服','頭':'頭髮','巴':'尾巴','話':'說話','蓋':'蓋子',
+      '王':'國王','玉':'玉石','田':'田地','目':'目標','耳':'耳朵','手':'手指','足':'足球',
+      '口':'門口','牛':'牛奶','馬':'馬上','魚':'金魚','鳥':'小鳥','蟲':'昆蟲',
+      '白':'白色','黑':'黑色','紅':'紅色','青':'青春','明':'明天','光':'光線','星':'星星',
+      '書':'讀書','學':'學校','字':'寫字','文':'文章','言':'語言','語':'國語','數':'數學',
+      '家':'回家','國':'國家','城':'城市','村':'農村','路':'馬路','門':'開門','窗':'窗戶',
+      '車':'汽車','船':'大船','飛':'飛機','走':'走路','跑':'跑步','跳':'跳舞','坐':'坐下',
+      '吃':'吃飯','喝':'喝水','看':'看見','聽':'聽見','說':'說話','讀':'讀書','寫':'寫字',
+      '多':'多少','少':'少年','長':'長大','短':'短褲','高':'高興','低':'低頭','快':'快樂',
+      '慢':'慢走','好':'好人','美':'美麗','新':'新年','舊':'舊的','老':'老師','幼':'幼稚',
+      '父':'父親','母':'母親','兄':'兄弟','弟':'弟弟','姊':'姊姊','妹':'妹妹','友':'朋友',
+      '春':'春天','秋':'秋天','冬':'冬天','早':'早上','晚':'晚上','午':'中午','夜':'夜晚',
+      '東':'東西','西':'西方','南':'南方','北':'北方','前':'前面','後':'後來','裡':'裡面',
+      '外':'外面','遠':'遠方','近':'附近','開':'開心','關':'關門','來':'來去','去':'出去',
+      '出':'出發','入':'進入','回':'回家','問':'問題','答':'回答','對':'對面','錯':'錯誤',
+      '心':'開心','力':'力氣','生':'生日','食':'食物','衣':'衣服','住':'住家',
+      '行':'行走','工':'工作','平':'平安','安':'安全','定':'一定','正':'正確','直':'一直',
+      '真':'真的','假':'放假','非':'非常','可':'可以',
+      '能':'能力','會':'開會','知':'知道','想':'想念','愛':'可愛','怕':'害怕','喜':'喜歡',
+      '樂':'快樂','苦':'辛苦','冷':'寒冷','熱':'炎熱',
+      '色':'顏色','聲':'聲音','香':'香味','重':'重要','輕':'輕鬆','深':'深海',
+      '濕':'潮濕','乾':'乾淨','潮':'潮流','流':'河流','河':'河水','海':'大海','湖':'湖水',
+      '雲':'白雲','雷':'打雷','電':'電話','石':'石頭','金':'金色','銀':'銀色',
+      '竹':'竹子','米':'白米','豆':'紅豆','果':'水果','菜':'蔬菜',
+      '根':'樹根','葉':'葉子','種':'種子','林':'森林','園':'公園','場':'操場',
+      '球':'地球','氣':'天氣','紙':'紙張','筆':'鉛筆',
+      '桌':'桌子','椅':'椅子','床':'睡床','房':'房間','樓':'樓梯','橋':'石橋',
+    };
+
+    // 查詞順序：Firebase 快取 → 本地詞庫 → Gemini API
     function getBattleQuestion(lvl) {
         const ch = lvl.char;
-        // 優先用快取的詞語（Gemini 或字單裡的詞）
-        const word = battleHints[ch] || (lvl.hint.length > 1 ? lvl.hint : null);
-        if (word && word.length > 1) {
+        // 1. 用已載入的詞（battleHints 含 Firebase 快取 + Gemini 結果 + 本地詞庫）
+        let word = battleHints[ch];
+        // 2. 用字單裡的多字詞語
+        if (!word && lvl.hint.length > 1) word = lvl.hint;
+        // 3. 用本地詞庫
+        if (!word) word = LOCAL_WORDS[ch];
+
+        if (word && word.length > 1 && word.includes(ch)) {
             const masked = word.replace(ch, '「＿」');
             return `寫出：${masked}`;
         }
-        // 還沒生成 → 顯示載入中，同時觸發單字生成
-        generateSingleBattleHint(ch);
+        // 4. 都沒有 → 觸發 Gemini 單字生成
+        if (!battleHintFailed[ch]) generateSingleBattleHint(ch);
         return `<span style="color:#aaa">🧠 造詞中...</span>`;
     }
 
     async function generateSingleBattleHint(ch) {
-        if (!GEMINI_KEY || battleHints[ch]) return;
+        if (!GEMINI_KEY || battleHints[ch] || battleHintFailed[ch]) return;
         try {
             const res = await fetch(
                 `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
@@ -497,21 +554,27 @@
                     `請用「${ch}」造一個常用的二字詞語（適合小學生理解）。只回傳那個詞語，不要其他文字。` }]}] })
                 }
             );
+            if (!res.ok) { battleHintFailed[ch] = true; return; }
             const data = await res.json();
             const word = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
             if (word.length >= 2 && word.includes(ch)) {
                 battleHints[ch] = word;
-                // 即時更新畫面（如果還在這題）
+                // ☁️ 存到 Firebase 共用詞庫
+                if (typeof saveBattleWord === 'function') saveBattleWord(ch, word);
                 if (currentMode === 'battle' && levels[currentLevel]?.char === ch) {
                     document.getElementById('question-text').innerHTML = getBattleQuestion(levels[currentLevel]);
                 }
             }
-        } catch(e) { console.warn('單字造詞失敗:', e); }
+        } catch(e) {
+            battleHintFailed[ch] = true;
+            console.warn('單字造詞失敗:', e);
+        }
     }
 
     async function generateAllBattleHints() {
+        // 只為 Firebase 和本地詞庫都沒有的字呼叫 Gemini
         if (!GEMINI_KEY) return;
-        const needHints = levels.filter(l => !battleHints[l.char]);
+        const needHints = levels.filter(l => !battleHints[l.char] && !LOCAL_WORDS[l.char]);
         if (!needHints.length) return;
         const chars = needHints.map(l => l.char).join('、');
         try {
@@ -525,12 +588,14 @@
 字：${chars}` }]}] })
                 }
             );
+            if (!res.ok) { console.warn('批次造詞 API:', res.status); return; }
             const data = await res.json();
             const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             const clean = text.replace(/```json|```/g, '').trim();
             const parsed = JSON.parse(clean);
             Object.assign(battleHints, parsed);
-            // 更新當前題目
+            // ☁️ 批次存到 Firebase
+            if (typeof saveBattleWords === 'function') saveBattleWords(parsed);
             if (currentMode === 'battle' && levels[currentLevel]) {
                 document.getElementById('question-text').innerHTML = getBattleQuestion(levels[currentLevel]);
             }
@@ -1226,6 +1291,65 @@
             console.warn('英雄榜上傳失敗:', e.message);
         }
     }
+
+    // ═══ 共用詞庫 Firebase 快取 ═══
+    // 存單字詞
+    async function saveBattleWord(ch, word) {
+        try {
+            await db.collection('cw-battle-words').doc('shared').set(
+                { [ch]: word, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+                { merge: true }
+            );
+            console.log('📚 詞庫已更新: ' + ch + '→' + word);
+        } catch(e) { console.warn('詞庫儲存失敗:', e.message); }
+    }
+    // 批次存詞
+    async function saveBattleWords(wordsObj) {
+        try {
+            await db.collection('cw-battle-words').doc('shared').set(
+                { ...wordsObj, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+                { merge: true }
+            );
+            console.log('📚 詞庫批次更新: ' + Object.keys(wordsObj).length + ' 個字');
+        } catch(e) { console.warn('詞庫批次儲存失敗:', e.message); }
+    }
+    // 載入所有已快取的詞
+    async function loadBattleWordsFromCloud() {
+        try {
+            const doc = await db.collection('cw-battle-words').doc('shared').get();
+            if (doc.exists) {
+                const data = doc.data();
+                delete data.updatedAt; // 移除 timestamp 欄位
+                Object.assign(battleHints, data);
+                cloudWordsLoaded = true;
+                console.log('📚 已從雲端載入 ' + Object.keys(data).length + ' 個詞');
+                // 如果在實戰模式，更新當前題目
+                if (currentMode === 'battle' && levels[currentLevel]) {
+                    document.getElementById('question-text').innerHTML = getBattleQuestion(levels[currentLevel]);
+                }
+            }
+        } catch(e) {
+            console.warn('詞庫雲端載入失敗:', e.message);
+        }
+    }
+    // 把本地詞庫中用到的詞也存到 Firebase（一次性同步）
+    async function syncLocalWordsToCloud() {
+        if (cloudWordsLoaded) {
+            const newWords = {};
+            for (const ch of levels.map(l => l.char)) {
+                if (!battleHints[ch] && LOCAL_WORDS[ch]) {
+                    newWords[ch] = LOCAL_WORDS[ch];
+                    battleHints[ch] = LOCAL_WORDS[ch];
+                }
+            }
+            if (Object.keys(newWords).length > 0 && typeof saveBattleWords === 'function') {
+                saveBattleWords(newWords);
+            }
+        }
+    }
+
+    // 🚀 App 啟動時載入雲端詞庫
+    loadBattleWordsFromCloud().then(() => syncLocalWordsToCloud());
 
     async function fetchCwLeaderboard(filter) {
         try {
