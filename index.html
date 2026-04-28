@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="恐龍書法家">
-    <meta name="theme-color" content="#FFF3E0">
+    <meta name="theme-color" content="#1a1a2e">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>恐龍書法家</title>
@@ -328,7 +328,65 @@
             background: #FFD700; color: #333; font-family: inherit; font-size: 1rem;
             font-weight: 600; cursor: pointer;
         }
-    </style>
+  
+    /* ═══ DARK THEME ═══ */
+    body{background:#0f0f1a!important;color:#e8e8f0!important;}
+    .top-bar{background:#0f0f1a!important;box-shadow:0 2px 8px rgba(0,0,0,0.4)!important;}
+    .user-btn{background:#16213e!important;color:#8888aa!important;border-color:#2a2a4a!important;}
+    .user-btn.active{background:#1a1a2e!important;color:#e8e8f0!important;border-color:#f5c842!important;}
+    .score-badge{background:#16213e!important;color:#f5c842!important;}
+    .gear-btn,.trophy-btn{background:#16213e!important;color:#8888aa!important;}
+    .font-toggle,.mode-toggle{border-color:#2a2a4a!important;}
+    .font-btn,.mode-btn{background:#16213e!important;color:#8888aa!important;border-color:#2a2a4a!important;}
+    .font-btn.active,.mode-btn.active{background:#1a1a2e!important;color:#e8e8f0!important;}
+    .progress-mini{background:#16213e!important;}
+    .progress-mini-fill{background:linear-gradient(90deg,#e94560,#f5c842)!important;}
+    .char-pill{background:#16213e!important;color:#8888aa!important;border-color:#2a2a4a!important;}
+    .char-pill.active{background:#e94560!important;color:white!important;border-color:#e94560!important;}
+    .char-pill.done{background:#1B813E!important;color:white!important;border-color:#1B813E!important;}
+    .question-area{color:#e8e8f0!important;background:transparent!important;box-shadow:none!important;border:none!important;}
+    .highlight{color:#f5c842!important;background:rgba(245,200,66,0.15)!important;}
+    .canvas-wrapper{background:#1a1a2e!important;border-color:#2a2a4a!important;box-shadow:0 8px 20px rgba(0,0,0,0.4)!important;background-image:none!important;}
+    .side-palette,.side-palette.right,.bottom-tools{background:rgba(255,255,255,0.03)!important;}
+    .cross-h{background:rgba(255,255,255,0.06)!important;border-color:rgba(255,100,100,0.2)!important;}
+    .cross-v{background:rgba(255,255,255,0.06)!important;border-color:rgba(255,100,100,0.2)!important;}
+    .btn-rewrite{background:#16213e!important;color:#f5c842!important;border-color:#2a2a4a!important;}
+    .btn-ok{background:#e94560!important;color:white!important;border-color:#c0392b!important;}
+    .grading-overlay{background:rgba(15,15,26,0.9)!important;color:#e8e8f0!important;}
+    .score-popup{background:#1a1a2e!important;border-color:#2a2a4a!important;box-shadow:0 10px 40px rgba(0,0,0,0.6)!important;}
+    .score-desc{color:#8888aa!important;}
+    .ocr-toast{background:#1a1a2e!important;color:#e8e8f0!important;box-shadow:0 4px 20px rgba(0,0,0,0.5)!important;}
+    .ocr-toast .ocr-seen{color:#e8e8f0!important;}
+    .complete-banner{background:#1a1a2e!important;color:#e8e8f0!important;border-color:#00b894!important;}
+    .cb-score{color:#f5c842!important;}
+    .no-key-warning{background:#1a1a2e!important;border-color:#f5c842!important;}
+    .no-key-warning .nk-icon,.no-key-warning .nk-title{color:#f5c842!important;}
+    .modal-overlay{background:rgba(0,0,0,0.7)!important;}
+    .modal{background:#1a1a2e!important;color:#e8e8f0!important;box-shadow:0 20px 60px rgba(0,0,0,0.5)!important;}
+    .modal h2{color:#e8e8f0!important;}
+    .modal label{color:#8888aa!important;}
+    .modal textarea,.modal input[type="password"]{background:#16213e!important;color:#e8e8f0!important;border-color:#2a2a4a!important;}
+    .modal textarea:focus,.modal input:focus{border-color:#f5c842!important;}
+    .modal .hint-text{color:#555577!important;}
+    .modal-btn.cancel{background:#16213e!important;color:#8888aa!important;}
+    .modal-btn.save{background:#e94560!important;color:white!important;}
+    .utab{background:#16213e!important;color:#8888aa!important;border-color:#2a2a4a!important;}
+    .utab.active{background:#f5c842!important;color:#1a1a2e!important;border-color:#f5c842!important;}
+    a{color:#e94560!important;}
+    .lb-overlay{background:rgba(0,0,0,0.7)!important;}
+    .lb-modal{background:#1a1a2e!important;color:#e8e8f0!important;}
+    .lb-tab{background:#16213e!important;color:#8888aa!important;}
+    .lb-tab.active{background:#f5c842!important;color:#1a1a2e!important;}
+    .lb-row:nth-child(odd){background:#16213e!important;}
+    .lb-empty{color:#555577!important;}
+    .lb-close{background:#f5c842!important;color:#1a1a2e!important;}
+    .thick-btn{background:#555577!important;}
+    .thick-btn.active{background:#e8e8f0!important;border-color:#f5c842!important;}
+    #share-url{background:#16213e!important;color:#e8e8f0!important;border-color:#00b894!important;}
+    ::-webkit-scrollbar{width:4px;height:4px;}
+    ::-webkit-scrollbar-track{background:#0f0f1a;}
+    ::-webkit-scrollbar-thumb{background:#2a2a4a;border-radius:2px;}
+  </style>
 </head>
 <body>
 
@@ -369,11 +427,18 @@
             </div>
             <div class="hint-text">產生一個包含兩人字單的連結，在其他裝置的瀏覽器打開即可自動匯入。也可用 LINE 傳送給家人。</div>
         </div>
+        <div class="section" style="padding:12px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
+            <label>🧹 維護工具</label>
+            <div style="display:flex;gap:8px;margin-top:6px;">
+              <button class="modal-btn cancel" onclick="clearCacheReload()" style="flex:1;text-align:center;font-size:0.8rem;">🔄 清除快取重載</button>
+              <button class="modal-btn cancel" onclick="resetCWProgress()" style="flex:1;text-align:center;font-size:0.8rem;">🗑️ 重設進度</button>
+            </div>
+            <div class="hint-text">清除快取：更新後使用。重設進度：從頭開始。</div>
+        </div>
         <div class="modal-btns">
             <button class="modal-btn cancel" onclick="closeSettings()">取消</button>
             <button class="modal-btn save" onclick="saveSettings()">✅ 儲存</button>
         </div>
-        <div style="text-align:center; margin-top:8px; font-size:0.6rem; color:#ccc;" id="version-display"></div>
     </div>
 </div>
 
@@ -401,7 +466,7 @@
         <div class="top-row1-right">
             <div class="score-badge" id="score-badge">0 分</div>
             <button class="trophy-btn" onclick="openLeaderboard()">🏆</button>
-            <button class="gear-btn" onclick="openSettings()" title="版本資訊">⚙️</button>
+            <button class="gear-btn" onclick="openSettings()">⚙️</button>
         </div>
     </div>
     <div class="top-row2">
@@ -448,7 +513,6 @@
     // ══════════════════════════════════════════
     // 全域狀態
     // ══════════════════════════════════════════
-    const APP_VERSION = 'v2.5.0-20260428';
     let currentUser = 'iggy';
     let GEMINI_KEY = '';
     let levels = []; // [{char, hint}]
@@ -743,7 +807,7 @@
     ];
     // 8 種粗細（2~30px）
     const BRUSH_WIDTHS = [2, 4, 6, 8, 12, 16, 22, 30];
-    let brushColor = '#2d3436';
+    let brushColor = '#ffffff';
     let brushWidth = 6;
 
     function initDrawingTools() {
@@ -959,10 +1023,12 @@
         showScorePopup(finalScore, desc, animClass);
         totalScore += finalScore;
         updateScore();
+        saveCWProgress();
 
         setTimeout(() => {
             document.querySelector('.score-popup')?.remove();
             currentLevel++;
+            saveCWProgress();
             loadLevel();
         }, 2500);
     }
@@ -1192,8 +1258,6 @@
     // 初始化
     // ══════════════════════════════════════════
     window.onload = () => {
-        console.log('🦖 恐龍書法家 ' + APP_VERSION);
-        document.getElementById('version-display').textContent = '恐龍書法家 ' + APP_VERSION;
         // 檢查 URL 是否有同步資料
         const imported = importFromUrl();
         if (imported) {
@@ -1215,6 +1279,15 @@
         document.fonts.ready.then(() => {
             initGame();
         });
+        // Restore progress
+        const prog = loadCWProgress();
+        if (prog && prog.currentLevel > 0) {
+          setTimeout(() => {
+            currentLevel = Math.min(prog.currentLevel, levels.length - 1);
+            totalScore = prog.totalScore || 0;
+            updateScore(); renderCharPills(); loadLevel();
+          }, 500);
+        }
         if (!GEMINI_KEY) setTimeout(showNoKeyWarning, 1000);
 
         // PWA Service Worker
@@ -1222,6 +1295,34 @@
             navigator.serviceWorker.register('./sw.js').catch(() => {});
         }
     };
+
+    // ═══ 進度記錄 ═══
+    function saveCWProgress() {
+      try { localStorage.setItem('cw-progress-' + currentUser, JSON.stringify({
+        currentLevel, totalScore, currentMode, currentFont, ts: Date.now()
+      })); } catch(e) {}
+    }
+    function loadCWProgress() {
+      try {
+        const raw = localStorage.getItem('cw-progress-' + currentUser);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch(e) { return null; }
+    }
+    function clearCacheReload() {
+      if (!confirm('確定清除快取並重新載入？')) return;
+      caches.keys().then(k=>Promise.all(k.map(c=>caches.delete(c))))
+        .then(()=>navigator.serviceWorker.getRegistrations())
+        .then(r=>Promise.all(r.map(x=>x.unregister())))
+        .then(()=>location.reload(true)).catch(()=>location.reload(true));
+    }
+    function resetCWProgress() {
+      if (!confirm('確定重設學習進度？')) return;
+      localStorage.removeItem('cw-progress-' + currentUser);
+      currentLevel = 0; totalScore = 0;
+      updateScore(); renderCharPills(); loadLevel();
+      closeSettings();
+    }
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
