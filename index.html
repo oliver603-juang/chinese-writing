@@ -414,6 +414,8 @@
             <label>🧠 Gemini API Key（手寫辨識）</label>
             <input type="password" id="gemini-key-input" placeholder="AIza...">
             <div class="hint-text">免費申請：<a href="https://aistudio.google.com/apikey" target="_blank" style="color:#4A90E2">Google AI Studio</a></div>
+            <div class="hint-text" style="margin-top:6px;">🤖 目前模型：<span id="cw-current-model" style="color:#4A90E2;font-family:monospace;">—</span>
+            <button onclick="localStorage.removeItem('cw-gemini-model');GEMINI_MODEL=GEMINI_MODELS[0];document.getElementById('cw-current-model').textContent=GEMINI_MODEL;" style="margin-left:8px;padding:2px 8px;border:1px solid #ddd;background:white;border-radius:8px;font-size:0.65rem;cursor:pointer;">重設為 2.5</button></div>
         </div>
         <div class="section">
             <label>☁️ 跨裝置同步字單</label>
@@ -522,6 +524,60 @@
     let currentMode = 'trace'; // 'trace' = 描紅, 'battle' = 實戰
     const CANVAS_SIZE = 320;
 
+    // ═══ Gemini Model Fallback + 429 Retry ═══
+    const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash'];
+    let GEMINI_MODEL = localStorage.getItem('cw-gemini-model') || GEMINI_MODELS[0];
+
+    async function callGemini(body, opts) {
+        if (!GEMINI_KEY) throw new Error('NO_KEY');
+        opts = opts || {};
+        const maxRetry = opts.maxRetry ?? 2;
+        let lastErr = null;
+        for (let mi = 0; mi < GEMINI_MODELS.length; mi++) {
+            const model = mi === 0 ? GEMINI_MODEL : GEMINI_MODELS[mi];
+            if (mi > 0 && model === GEMINI_MODEL) continue;
+            for (let attempt = 0; attempt <= maxRetry; attempt++) {
+                try {
+                    const res = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
+                        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+                    );
+                    if (res.ok) {
+                        if (model !== GEMINI_MODEL) {
+                            GEMINI_MODEL = model;
+                            try { localStorage.setItem('cw-gemini-model', model); } catch(e) {}
+                            console.log('🔄 已切換到模型:', model);
+                        }
+                        return await res.json();
+                    }
+                    const errData = await res.json().catch(() => ({ error: { code: res.status } }));
+                    const code = errData?.error?.code || res.status;
+                    const status = errData?.error?.status || '';
+                    if (code === 429 && attempt < maxRetry) {
+                        let waitMs = Math.min(8000, 2000 * Math.pow(2, attempt));
+                        const retryInfo = errData?.error?.details?.find(d => d['@type']?.includes('RetryInfo'));
+                        if (retryInfo?.retryDelay) {
+                            const m = retryInfo.retryDelay.match(/(\d+(?:\.\d+)?)s/);
+                            if (m && parseFloat(m[1]) < 10) waitMs = Math.ceil(parseFloat(m[1]) * 1000) + 200;
+                        }
+                        console.log(`⏳ 429 retry ${attempt+1}/${maxRetry}, wait ${waitMs}ms`);
+                        await new Promise(r => setTimeout(r, waitMs));
+                        continue;
+                    }
+                    if (code === 404 || status === 'NOT_FOUND' || status === 'UNAVAILABLE') { lastErr = new Error('MODEL_' + code); break; }
+                    if (code === 429) { lastErr = new Error('QUOTA'); break; }
+                    if (code === 400 && errData?.error?.message?.includes('API key')) throw new Error('BAD_KEY');
+                    throw new Error('API_' + code);
+                } catch(e) {
+                    if (e.message === 'BAD_KEY' || e.message === 'QUOTA') throw e;
+                    if (attempt >= maxRetry) { lastErr = e; break; }
+                    await new Promise(r => setTimeout(r, 1500));
+                }
+            }
+        }
+        throw lastErr || new Error('ALL_MODELS_FAILED');
+    }
+
     const FONT_MAP = {
         kai:   "'Iansui', serif",
         jason: "'JasonHandwriting', cursive",
@@ -613,15 +669,11 @@
     async function generateSingleBattleHint(ch) {
         if (!GEMINI_KEY || battleHints[ch] || battleHintFailed[ch]) return;
         try {
-            const res = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-                { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ contents: [{ parts: [{ text:
-                    `請用「${ch}」造一個常用的二字詞語（適合小學生理解）。只回傳那個詞語，不要其他文字。` }]}] })
-                }
+            const data = await callGemini(
+                { contents: [{ parts: [{ text:
+                    `請用「${ch}」造一個常用的二字詞語（適合小學生理解）。只回傳那個詞語，不要其他文字。` }]}] },
+                { maxRetry: 1 }
             );
-            if (!res.ok) { battleHintFailed[ch] = true; return; }
-            const data = await res.json();
             const word = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
             if (word.length >= 2 && word.includes(ch)) {
                 battleHints[ch] = word;
@@ -644,18 +696,14 @@
         if (!needHints.length) return;
         const chars = needHints.map(l => l.char).join('、');
         try {
-            const res = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-                { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ contents: [{ parts: [{ text:
+            const data = await callGemini(
+                { contents: [{ parts: [{ text:
                     `請為以下每個中文字各造一個常用的二字詞語（適合小學生）。
 回傳 JSON 格式，例如：{"取":"取得","初":"當初"}
 只要 JSON，不要其他文字。
-字：${chars}` }]}] })
-                }
+字：${chars}` }]}] },
+                { maxRetry: 1 }
             );
-            if (!res.ok) { console.warn('批次造詞 API:', res.status); return; }
-            const data = await res.json();
             const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             const clean = text.replace(/```json|```/g, '').trim();
             const parsed = JSON.parse(clean);
@@ -743,6 +791,7 @@
         settingsTab = currentUser;
         updateSettingsTab();
         document.getElementById('gemini-key-input').value = GEMINI_KEY;
+        document.getElementById('cw-current-model').textContent = GEMINI_MODEL;
     }
     function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
 
@@ -995,7 +1044,9 @@
                 }
             } else {
                 // 沒有 Gemini Key
-                finalScore = 6; desc = '已完成（無 AI）'; animClass = 'anim-normal';
+                finalScore = 6;
+                desc = geminiResult === '⏳' ? '配額用完，稍後再試' : geminiResult === '🔑' ? 'Key 無效，請重設' : '已完成（無 AI）';
+                animClass = 'anim-normal';
             }
         } else {
             // 🖌️ 描紅模式：像素比對 + Gemini OCR
@@ -1064,24 +1115,20 @@
 - 回傳 JSON 格式：{"char": "你看到的字"}`;
 
         try {
-            const res = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-                { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [
-                            { inlineData: { mimeType: 'image/png', data: imageData } },
-                            { text: prompt }
-                        ]}]
-                    })
-                }
-            );
-            const data = await res.json();
+            const data = await callGemini({
+                contents: [{ parts: [
+                    { inlineData: { mimeType: 'image/png', data: imageData } },
+                    { text: prompt }
+                ]}]
+            }, { maxRetry: 1 });
             const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             const clean = text.replace(/```json|```/g, '').trim();
             const parsed = JSON.parse(clean);
             return parsed.char || '？';
         } catch (err) {
-            console.error('Gemini OCR error:', err);
+            console.error('Gemini OCR error:', err.message);
+            if (err.message === 'QUOTA') return '⏳';
+            if (err.message === 'BAD_KEY') return '🔑';
             return null;
         }
     }
