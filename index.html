@@ -1106,13 +1106,18 @@
     // ══════════════════════════════════════════
     async function recognizeWithGemini() {
         const imageData = drawCanvas.toDataURL('image/png').split(',')[1];
-        const prompt = `你是一個手寫辨識器。一個小朋友在畫布上寫了一個中文字。
+        const target = levels[currentLevel]?.char || '';
+        const prompt = `你是手寫中文字辨識器。目標字：${target}
 
-你的唯一任務：辨識這個手寫的中文字是什麼。
-- 只回傳你看到的那一個中文字。
-- 如果看不清楚或不確定，回傳「？」。
-- 不要猜測、不要解釋、不要加任何其他文字。
-- 回傳 JSON 格式：{"char": "你看到的字"}`;
+一個小朋友正在練習寫「${target}」這個字。請辨識圖片中手寫的是什麼字。
+
+判斷規則：
+- 如果筆畫結構大致正確、能看出是「${target}」，回傳「${target}」
+- 如果寫得不像「${target}」，回傳你認為圖片中最像的那個中文字
+- 注意：小朋友的字可能歪歪扭扭、筆畫不完整，只要大致結構對就算
+- 不要被墨水顏色、筆畫粗細影響判斷
+- 只回傳一個中文字，不要解釋
+- 回傳 JSON 格式：{"char": "辨識結果"}`;
 
         try {
             const data = await callGemini({
@@ -1160,9 +1165,10 @@
             <span>→</span>
             <span>${expected}</span>
             <span class="${isCorrect ? 'ocr-ok' : 'ocr-ng'}">${isCorrect ? '✅' : '❌'}</span>
-        </div>`;
+        </div>
+        <div style="font-size:0.7rem;color:#888;margin-top:4px;text-align:center;">${isCorrect ? '🎉 AI 辨識正確！' : `💧 AI 看成「${seen}」`}</div>`;
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2500);
+        setTimeout(() => toast.remove(), isCorrect ? 2000 : 3500);
     }
 
     function showComplete() {
